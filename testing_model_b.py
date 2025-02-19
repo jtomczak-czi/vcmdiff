@@ -11,8 +11,8 @@ from modules.nnets import UNetMLP, UNetMLPbn, UNetMLPx, UNetMLPb
 if __name__ == "__main__":
     with torch.no_grad():
         # PATHS
-        result_dir = 'logging_space/scDiff_data/diffusion/version_3/checkpoints/'
-        name = 'epoch=84-step=7310.ckpt'
+        result_dir = 'logging_space/scDiff_data/diffusion/version_0/checkpoints/'
+        name = 'epoch=101-step=8772.ckpt'
 
 
         # MODEL

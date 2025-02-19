@@ -136,7 +136,7 @@ class UNet1D(nn.Module):
 
 
 class UNetMLP(nn.Module):
-    """U-Net with Stricter Downsampling and Fully Connected Bottleneck"""
+    """U-Net with MLPs"""
     def __init__(self, in_dim=2, mid_dim=128, bottleneck_dim=512, num_steps=10):
         super().__init__()
         self.time_embed = timestep_embedding(torch.arange(num_steps), in_dim, max_period=10000)
@@ -184,7 +184,7 @@ class UNetMLP(nn.Module):
 
 
 class UNetMLPbn(nn.Module):
-    """U-Net with Stricter Downsampling and Fully Connected Bottleneck"""
+    """U-Net with batch-norm"""
     def __init__(self, in_dim=2, mid_dim=128, bottleneck_dim=512, num_steps=10):
         super().__init__()
         self.time_embed = timestep_embedding(torch.arange(num_steps), in_dim, max_period=10000)
@@ -237,7 +237,7 @@ class UNetMLPbn(nn.Module):
         return d1.view(x.shape[0], C, -1)
 
 class UNetMLP_new(nn.Module):
-    """U-Net with Stricter Downsampling and Fully Connected Bottleneck"""
+    """U-Net """
     def __init__(self, in_dim=2, mid_dim=128, bottleneck_dim=512, num_steps=10):
         super().__init__()
         self.time_embed = nn.Sequential(nn.Linear(1, in_dim), nn.Tanh())
@@ -289,7 +289,7 @@ class UNetMLP_new(nn.Module):
 
 
 class UNetMLPx(nn.Module):
-    """U-Net with Stricter Downsampling and Fully Connected Bottleneck"""
+    """U-Net that takes x (counts) and b = 1[x>0]"""
     def __init__(self, in_dim=2, mid_dim=128, bottleneck_dim=512, num_steps=10):
         super().__init__()
         self.time_embed = timestep_embedding(torch.arange(num_steps), in_dim, max_period=10000)
@@ -341,7 +341,7 @@ class UNetMLPx(nn.Module):
 
 
 class UNetMLPb(nn.Module):
-    """U-Net with Stricter Downsampling and Fully Connected Bottleneck"""
+    """U-Net for binary diffusion"""
     def __init__(self, in_dim=2, mid_dim=128, bottleneck_dim=512, num_steps=10):
         super().__init__()
         self.time_embed = timestep_embedding(torch.arange(num_steps), in_dim, max_period=10000)
@@ -351,16 +351,22 @@ class UNetMLPb(nn.Module):
         self.time_proj_bottleneck = nn.Linear(in_dim, bottleneck_dim)
 
         # Encoder with Stricter Downsampling
+        self.layer_norm_e1 = nn.LayerNorm(in_dim)
         self.enc1 = MLPblock([in_dim, mid_dim], activation=nn.SiLU())
+        self.layer_norm_e2 = nn.LayerNorm(mid_dim)
         self.enc2 = MLPblock([mid_dim, mid_dim], activation=nn.SiLU())
+        self.layer_norm_e3 = nn.LayerNorm(mid_dim)
         self.enc3 = MLPblock([mid_dim, mid_dim], activation=nn.SiLU())
 
         # Bottleneck with Fully Connected Layer
         self.bottleneck = MLPblock([mid_dim, bottleneck_dim], activation=nn.SiLU())
 
         # Decoder
+        self.layer_norm_d3 = nn.LayerNorm(bottleneck_dim)
         self.dec3 = MLPblock([bottleneck_dim, mid_dim], activation=nn.SiLU())
+        self.layer_norm_d2 = nn.LayerNorm(mid_dim)
         self.dec2 = MLPblock([mid_dim, mid_dim], activation=nn.SiLU())
+        self.layer_norm_d1 = nn.LayerNorm(mid_dim)
         self.dec1 = MLPblock([mid_dim, in_dim], activation=nn.Identity())
 
     def forward(self, x, t):
@@ -375,16 +381,23 @@ class UNetMLPb(nn.Module):
 
         # Encoding with Downsampling
         x_in = (x + t_emb)
+        x_in = self.layer_norm_e1(x_in)
         e1 = self.enc1(x_in)  # Downsampled
+        e1 = self.layer_norm_e2(e1)
         e2 = self.enc2(e1 + t_proj_enc)  # Downsampled
+        e2 = self.layer_norm_e2(e2)
         e3 = self.enc3(e2 + t_proj_enc)  # Downsampled
+        e3 = self.layer_norm_e3(e3)
 
         # Bottleneck
         bottl = self.bottleneck(e3 + t_proj_enc)
 
         # Decoding with Skip Connections
+        bottl = self.layer_norm_d3(bottl)
         d3 = self.dec3(bottl + t_proj_bottleneck) + e2
+        d3 = self.layer_norm_d2(d3)
         d2 = self.dec2(d3 + t_proj_enc) + e1
+        d2 = self.layer_norm_d1(d2)
         d1 = self.dec1(d2)  # Final layer
 
         out = d1.view(x.shape[0], C, -1)
