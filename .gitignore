@@ -169,3 +169,12 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# JAKUB's
+*.pyc
+__pycache__/
+
+/data
+/logging_space
+/varia
+/figures
