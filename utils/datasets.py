@@ -46,47 +46,6 @@ class FourierDataset(Dataset):
         return self.data[idx], 0  # Dummy label
 
 
-# class DCTDataset(Dataset):
-#     """Dataset for training the diffusion.py model on Fourier coefficients."""
-#
-#     def __init__(self, file_name: str='data/pancreas.npy', scale=None, mode='train', ratio=0.70):
-#         super().__init__()
-#         self.num_samples = None
-#         self.N = None
-#         self.file_name = file_name
-#         self.scale = scale
-#         self.data = self.generate_data()
-#
-#     def generate_data(self):
-#         """Generate DCT"""
-#         data = np.load(self.file_name)
-#         print('loading data')
-#         print(data.shape)
-#
-#         data = torch.tensor(data, dtype=torch.float32)
-#         self.num_samples = data.shape[0]
-#         self.N = data.shape[1]
-#         D = []
-#         for i in range(self.num_samples):
-#             signal = data[[i]]
-#             signal_dct = dct.dct(signal, norm='ortho')
-#             D.append(signal_dct)  # Stack as (2, N)
-#         D = torch.stack(D, dim=0)  # Stack as (num_samples, 2, N)
-#         return D
-#
-#     def scale_data(self):
-#         if self.scale is None:
-#             self.scale = torch.std(self.data, dim=2, keepdim=True)
-#
-#         self.data = self.data / self.scale
-#
-#     def __len__(self):
-#         return self.num_samples
-#
-#     def __getitem__(self, idx):
-#         return self.data[idx], 0  # Dummy label
-
-
 class LoadNumpyData(object):
     def __init__(self, file_name: str='data/pancreas.npy', ratios=(0.7, 0.15, 0.15)):
         super().__init__()
@@ -116,7 +75,7 @@ class LoadNumpyData(object):
 
 
 class DCTDataset(Dataset):
-    """Dataset for training the diffusion.py model on Fourier coefficients."""
+    """Dataset for training the diffusion.py model on DCT coefficients."""
 
     def __init__(self, data_raw, shift=None, scale=None):
         super().__init__()

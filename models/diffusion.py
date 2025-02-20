@@ -149,6 +149,7 @@ class ConditionalDiffusionModel(pl.LightningModule):
         return loss
 
     def training_step(self, batch, batch_idx):
+        self.train()
         x, b = batch
         batch_size = x.shape[0]
         t = torch.randint(0, self.timesteps, (batch_size,), device=self.device)
@@ -157,11 +158,13 @@ class ConditionalDiffusionModel(pl.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
+        self.eval()
         loss = self.simple_loss_full(batch, batch_idx)
         self.log("val_loss", loss, prog_bar=True, on_step=False, on_epoch=True)
         return loss
 
     def test_step(self, batch, batch_idx):
+        self.eval()
         loss = self.simple_loss_full(batch, batch_idx)
         self.log("test_loss", loss)
         return loss

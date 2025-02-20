@@ -7,9 +7,10 @@ import lightning.pytorch as pl
 from lightning.pytorch.loggers import CSVLogger
 from lightning.pytorch.callbacks import LearningRateMonitor, TQDMProgressBar, ModelCheckpoint, EarlyStopping
 
-from models.diffusion import DiffusionModel, ConditionalDiffusionModel, BinaryDiffusion
-from modules.nnets import DiT, UNet1D, ResNetTime, MLPTime, UNetMLP, UNetMLPbn, UNetMLP_new, UNetMLPb
+from models.diffusion import DiffusionModel
+from modules.nnets import DiT, UNetMLPln
 from utils.datasets import LoadNumpyData, DCTDataset, FourierDataset, NormalizedDataset, CountDataset, CountOccurenceDataset
+
 
 def run():
     # Training setup
@@ -26,25 +27,29 @@ def run():
     val_dataset_np = data_np.get_data(data_type='val')
     test_dataset_np = data_np.get_data(data_type='test')
 
-    train_dataset = CountOccurenceDataset(train_dataset_np)
-    val_dataset = CountOccurenceDataset(val_dataset_np)
-    test_dataset = CountOccurenceDataset(test_dataset_np)
+    train_dataset = CountDataset(train_dataset_np)
+    val_dataset = CountDataset(val_dataset_np)
+    test_dataset = CountDataset(test_dataset_np)
 
     train_dataloader = DataLoader(train_dataset, batch_size=MINI_BATCH_train, shuffle=True)
     val_dataloader = DataLoader(val_dataset, batch_size=MINI_BATCH_val, shuffle=False)
     test_dataloader = DataLoader(test_dataset, batch_size=MINI_BATCH_val, shuffle=False)
 
     # Initialize model and trainer
-    # LOGGER
-    # csv_logger = CSVLogger("/mnt/czi-sci-ai/intrinsic-variation-gene-ex/project_gene_regulation/scDiff_data", name="diffusion.py")
-    csv_logger = CSVLogger("logging_space/scDiff_data", name="diffusion")
+    csv_logger = CSVLogger("logging_space/VCM-Diff_data", name="diffusion")
 
     # MODEL
     # -- Parameterization --
-    nnet = UNetMLPb(in_dim=1000, mid_dim=512, bottleneck_dim=512, num_steps=NUM_STEPS)
+    # in_channels=1
+    # hidden_size=256
+    # depth=6
+    # num_heads=8
+    # sequence_length = 1000
+
+    nnet = UNetMLPln(in_dim=1000, mid_dim=512, bottleneck_dim=512, num_steps=NUM_STEPS)
 
     # -- Probabilistic Model --
-    model = BinaryDiffusion(nnet=nnet, timesteps=NUM_STEPS, beta_min=1e-4, beta_max=0.02, lr=1e-4, sequence_length=2000, T_max=100)
+    model = DiffusionModel(nnet=nnet, timesteps=NUM_STEPS, beta_min=1e-4, beta_max=0.02, lr=1e-4, sequence_length=2000, T_max=100)
 
     # TRAINER
     # -checkpoints
@@ -65,4 +70,4 @@ def run():
 if __name__ == '__main__':
     run()
 
-    print("-----===== Training is done =====-----")
+    print('-----===== Training is done =====-----')

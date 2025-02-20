@@ -12,7 +12,7 @@ from modules.nnets import DiT, UNet1D, ResNetTime, MLPTime, UNetMLP, UNetMLPbn, 
 from utils.datasets import LoadNumpyData, DCTDataset, FourierDataset, NormalizedDataset, CountDataset, CountOccurenceDataset
 
 
-if __name__ == '__main__':
+def run():
     # Training setup
     MINI_BATCH_train = 128
     MINI_BATCH_val = 256
@@ -85,3 +85,9 @@ if __name__ == '__main__':
 
     # Test model
     trainer.test(model, dataloaders=test_dataloader)
+
+
+if __name__ == '__main__':
+    run()
+
+    print('-----===== Training is done =====-----')

@@ -7,7 +7,7 @@ import lightning.pytorch as pl
 from lightning.pytorch.loggers import CSVLogger
 from lightning.pytorch.callbacks import LearningRateMonitor, TQDMProgressBar, ModelCheckpoint, EarlyStopping
 
-from models.diffusion import DiffusionModel, ConditionalDiffusionModel, BinaryDiffusion
+from models.diffusion import BinaryDiffusion
 from modules.nnets import DiT, UNet1D, ResNetTime, MLPTime, UNetMLP, UNetMLPbn, UNetMLP_new, UNetMLPb
 from utils.datasets import LoadNumpyData, DCTDataset, FourierDataset, NormalizedDataset, CountDataset, CountOccurenceDataset
 
