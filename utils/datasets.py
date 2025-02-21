@@ -176,14 +176,14 @@ class CountDataset(Dataset):
         self.data = self.generate_data(data_raw)
 
     def generate_data(self, data_raw):
-        """Generate DCT"""
+        """Prepare Counts"""
         print(f'Loaded data of the following shape: {data_raw.shape}')
 
         data = torch.tensor(data_raw, dtype=torch.float32)
         self.num_samples = data.shape[0]
         self.D = data.shape[1]
 
-        return data
+        return data.unsqueeze(1)
 
     def __len__(self):
         return self.num_samples

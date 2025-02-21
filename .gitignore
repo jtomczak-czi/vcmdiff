@@ -171,6 +171,7 @@ cython_debug/
 .pypirc
 
 # JAKUB's
+.DS_Store
 *.pyc
 __pycache__/
 
