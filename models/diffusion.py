@@ -10,6 +10,7 @@ import torch.distributions as td
 import lightning.pytorch as pl
 
 from utils.mmd import MMDLoss, BrayCurtisKernel
+from utils.simple_functions import log1p, log1p_inv, counts2real, real2counts, counts2simplex, simplex2real
 
 
 class DiffusionModel(pl.LightningModule):
@@ -138,15 +139,23 @@ class PoissonDiffusionModel(pl.LightningModule):
         alpha_bar_t = self.alpha_cumprod[t].view(-1, 1, 1).to(x_start.device)
         return torch.sqrt(alpha_bar_t) * x_start + torch.sqrt(1 - alpha_bar_t) * noise, noise
 
+    def poisson_loss(self, x, logits, total_counts):
+        x_simplex = torch.softmax(logits, -1)
+        rates = x_simplex * total_counts
+
+        loss = -td.Poisson(rates).log_prob(x)
+
+        return loss
+
     def simple_loss(self, x, t):
         x_noisy, noise = self.q_sample(x, t)
         predicted_noise = self(x_noisy, t)
         loss = F.mse_loss(predicted_noise, noise)
+
+
         return loss
 
-    def simple_loss_full(self, batch, batch_idx):
-        x, _ = batch
-        batch_size = x.shape[0]
+    def simple_loss_full(self, x, total_counts, batch_idx):
         loss = 0.
 
         for t_iter in range(self.timesteps):
@@ -158,8 +167,10 @@ class PoissonDiffusionModel(pl.LightningModule):
 
     def normalize_data(self, x):
         total_counts = x.sum(-1, keepdim=True)
-        x_normalized = x / N
-        return x_normalized, N
+        x_normalized = x / total_counts
+        return x_normalized, total_counts
+    
+    
 
     def training_step(self, batch, batch_idx):
         x, _ = batch
