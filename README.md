@@ -1,5 +1,5 @@
 # vcmDiff
-A repository for diffusion-based models in virtual cell modeling
+A repository for diffusion-based models for virtual cell modeling
 
 ## Code of Conduct
 
