@@ -17,9 +17,11 @@ def assess_gene_model1d_x(model_best, result_dir, name, test_data, N: int=1000, 
     x_data = test_data.data[:N, :, :].squeeze()
 
     x1 = torch.round(torch.clamp(x_data, 0.))
+    x1 = x1.to('cpu')
 
     # get a synthetic sample
     gen_data = model_best.sample(shape=(x_data.shape[0], 1, x_data.shape[1])).squeeze()
+    gen_data = gen_data.to('cpu')
 
     x2 = torch.round(torch.clamp(gen_data, 0.))
 
@@ -40,6 +42,7 @@ def assess_gene_model1d_x(model_best, result_dir, name, test_data, N: int=1000, 
     plt.title(name)
     plt.legend()
     plt.savefig(result_dir + name + '_hist_mean.pdf', bbox_inches='tight', dpi=300)
+    plt.savefig(result_dir + name + '_hist_mean.png', bbox_inches='tight', dpi=300)
     plt.close()
 
     bins = np.linspace(bin_min, bin_max, 50)
@@ -48,6 +51,7 @@ def assess_gene_model1d_x(model_best, result_dir, name, test_data, N: int=1000, 
     plt.title(name)
     plt.legend()
     plt.savefig(result_dir + name + '_hist_std.pdf', bbox_inches='tight', dpi=300)
+    plt.savefig(result_dir + name + '_hist_std.png', bbox_inches='tight', dpi=300)
     plt.close()
     print('Hist samples - DONE!')
 
@@ -57,6 +61,7 @@ def assess_gene_model1d_x(model_best, result_dir, name, test_data, N: int=1000, 
     plt.title(name)
     plt.legend()
     plt.savefig(result_dir + name + '_bar_mean.pdf', bbox_inches='tight', dpi=300)
+    plt.savefig(result_dir + name + '_bar_mean.png', bbox_inches='tight', dpi=300)
     plt.close()
 
     plt.bar(range(x1.shape[1]), x1.std(0), alpha=0.75, label='Data-std')
@@ -64,12 +69,14 @@ def assess_gene_model1d_x(model_best, result_dir, name, test_data, N: int=1000, 
     plt.title(name)
     plt.legend()
     plt.savefig(result_dir + name + '_bar_std.pdf', bbox_inches='tight', dpi=300)
+    plt.savefig(result_dir + name + '_bar_std.png', bbox_inches='tight', dpi=300)
     plt.close()
 
     plt.bar(range(x1.shape[1]), abs(x1.mean(0) - x2.mean(0).detach()), alpha=1., label='Difference')
     plt.title(f'Avg. abs difference: {torch.abs(x1.mean(0) - x2.mean(0).detach()).mean()}')
     plt.legend()
     plt.savefig(result_dir + name + '_bar_difference.pdf', bbox_inches='tight', dpi=300)
+    plt.savefig(result_dir + name + '_bar_difference.png', bbox_inches='tight', dpi=300)
     plt.close()
     print('Hist samples - DONE!')
 

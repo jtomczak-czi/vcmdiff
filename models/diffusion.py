@@ -16,8 +16,9 @@ from utils.simple_functions import log1p, log1p_inv, counts2real, real2counts, c
 class DiffusionModel(pl.LightningModule):
     """Diffusion Model"""
 
-    def __init__(self, nnet, timesteps=1000, beta_min=1e-4, beta_max=0.02, lr=1e-4, sequence_length=128, **kwargs):
+    def __init__(self, nnet, timesteps=1000, beta_min=1e-4, beta_max=0.02, lr=1e-4, sequence_length=128, device='cpu', **kwargs):
         super().__init__()
+        
         self.nnet = nnet  # DiT(sequence_length, in_channels=in_channels, hidden_size=hidden_size, depth=depth, num_heads=num_heads)
         self.lr = lr
         # Define noise schedule
@@ -32,7 +33,7 @@ class DiffusionModel(pl.LightningModule):
 
     def q_sample(self, x_start, t):
         """Adds Gaussian noise to the input signal according to the diffusion.py schedule."""
-        noise = torch.randn_like(x_start)
+        noise = torch.randn_like(x_start).to(x_start.device)
         self.alpha_cumprod = self.alpha_cumprod.to(x_start.device)
         alpha_bar_t = self.alpha_cumprod[t].view(-1, 1, 1).to(x_start.device)
         return torch.sqrt(alpha_bar_t) * x_start + torch.sqrt(1 - alpha_bar_t) * noise, noise
@@ -45,6 +46,7 @@ class DiffusionModel(pl.LightningModule):
 
     def simple_loss_full(self, batch, batch_idx):
         x, _ = batch
+        x = x.to(self.device)
         batch_size = x.shape[0]
         loss = 0.
 
@@ -57,6 +59,7 @@ class DiffusionModel(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         x, _ = batch
+        x = x.to(self.device)
         batch_size = x.shape[0]
         t = torch.randint(0, self.timesteps, (batch_size,), device=self.device)
         loss = self.simple_loss(x, t)
