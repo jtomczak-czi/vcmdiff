@@ -162,7 +162,7 @@ class PoissonDiffusionModel(pl.LightningModule):
         loss = 0.
 
         for t_iter in range(self.timesteps):
-            t = torch.randint(0, self.timesteps, (batch_size,), device=self.device) * 0 + t_iter
+            t = torch.randint(0, self.timesteps, (x.shape[0],), device=self.device) * 0 + t_iter
             loss = loss + self.simple_loss(x, t)
 
         loss = loss / self.timesteps
