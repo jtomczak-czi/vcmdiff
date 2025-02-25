@@ -12,8 +12,12 @@ from modules.nnets import DiT, UNetMLPln
 from utils.datasets import LoadNumpyData, DCTDataset, FourierDataset, NormalizedDataset, CountDataset, CountOccurenceDataset
 
 
-def run():
+def run(data_path='data/pbmc3k_2000.npy'):
     # Training setup
+    INPUT_DIM = 784
+
+    LR = 1e-3
+
     MINI_BATCH_train = 128
     MINI_BATCH_val = 256
     NUM_STEPS = 100
@@ -22,7 +26,7 @@ def run():
     PATIENCE = 10
 
     # Dataset
-    data_np = LoadNumpyData(file_name='data/pancreas.npy', ratios=(0.7, 0.15, 0.15))
+    data_np = LoadNumpyData(file_name=data_path, ratios=(0.7, 0.15, 0.15))
     train_dataset_np = data_np.get_data(data_type='train')
     val_dataset_np = data_np.get_data(data_type='val')
     test_dataset_np = data_np.get_data(data_type='test')
@@ -37,6 +41,7 @@ def run():
 
     # Initialize model and trainer
     csv_logger = CSVLogger("logging_space/VCM-Diff_data", name="diffusion")
+    csv_logger = CSVLogger("logging_space/VCM-Diff_data", name="diffusion")
 
     # MODEL
     # -- Parameterization --
@@ -49,7 +54,9 @@ def run():
     nnet = UNetMLPln(in_dim=1000, mid_dim=512, bottleneck_dim=512, num_steps=NUM_STEPS)
 
     # -- Probabilistic Model --
-    model = DiffusionModel(nnet=nnet, timesteps=NUM_STEPS, beta_min=1e-4, beta_max=0.02, lr=1e-4, sequence_length=2000, T_max=100)
+    # model = DiffusionModel(nnet=nnet, timesteps=NUM_STEPS, beta_min=1e-4, beta_max=0.02, lr=LR, sequence_length=2000, T_max=100, device=DEVICE)
+    model = DiffusionModel(nnet=nnet, timesteps=NUM_STEPS, beta_min=1e-1, beta_max=0.9, lr=LR, sequence_length=2000, T_max=100, device=DEVICE)
+    model = model.to(DEVICE)
 
     # TRAINER
     # -checkpoints
