@@ -24,6 +24,8 @@ def assess_gene_model1d_x(model_best, result_dir, name, test_data, N: int=1000, 
     gen_data = gen_data.to('cpu')
 
     x2 = torch.round(torch.clamp(gen_data, 0.))
+    plt.imshow(x2[0].view(28,28).cpu())
+    plt.show()
 
     # Calculate the MMD loss
     mmd = MMDLoss(kernel=BrayCurtisKernel())

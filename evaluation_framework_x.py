@@ -12,7 +12,7 @@ from modules.unets import UNetMLPln
 def run(data_path='', result_path='', epoch_no=1, step_no=1):
     with torch.no_grad():
         # Training setup
-        INPUT_DIM = 2000
+        INPUT_DIM = 784
 
         LR = 1e-3
 
@@ -58,4 +58,4 @@ def run(data_path='', result_path='', epoch_no=1, step_no=1):
 
 
 if __name__ == "__main__":
-    run(data_path='data/pbmc3k_2000.npy', result_path='logging_space/VCM-Diff_data/diffusion/version_9/', epoch_no=95, step_no=1440)
+    run(data_path='data/pbmc3k_2000.npy', result_path='logging_space/VCM-Diff_data/diffusion/version_1/', epoch_no=154, step_no=2325)

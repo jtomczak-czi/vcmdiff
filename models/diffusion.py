@@ -67,7 +67,12 @@ class DiffusionModel(pl.LightningModule):
         return loss
 
     def validation_step(self, batch, batch_idx):
-        loss = self.simple_loss_full(batch, batch_idx)
+        # loss = self.simple_loss_full(batch, batch_idx)
+        x, _ = batch
+        x = x.to(self.device)
+        batch_size = x.shape[0]
+        t = torch.randint(0, self.timesteps, (batch_size,), device=self.device)
+        loss = self.simple_loss(x, t)
         self.log("val_loss", loss, prog_bar=True, on_step=False, on_epoch=True)
         return loss
 
