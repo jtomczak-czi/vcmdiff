@@ -60,7 +60,7 @@ class UNetMLPln(nn.Module):
     """U-Net with MLPs"""
     def __init__(self, in_dim=2, mid_dim=128, bottleneck_dim=512, num_steps=10):
         super().__init__()
-        self.time_embed = timestep_embedding(torch.arange(num_steps), in_dim, max_period=10000)
+        self.time_embed = TimestepEmbedder(in_dim)
 
         # time projections
         self.time_proj_enc = nn.Linear(in_dim, mid_dim)
@@ -91,7 +91,7 @@ class UNetMLPln(nn.Module):
         C = x.shape[1]
         x = x.flatten(1)
         # time embedding
-        t_emb = self.time_embed[t.long()]  # B x D_in
+        t_emb = self.time_embed(t) # B x D_in
         t_proj_enc = self.time_proj_enc(t_emb) # B x D_mid
         t_proj_bottleneck = self.time_proj_bottleneck(t_emb) # B x D_bottleneck
 
@@ -146,7 +146,7 @@ class UNetMLP(nn.Module):
         C = x.shape[1]
         x = x.flatten(1)
         # time embedding
-        t_emb = self.time_embed[t.long()]  # B x D_in
+        t_emb = self.time_embed(t)  # B x D_in
         t_proj_enc = self.time_proj_enc(t_emb) # B x D_mid
         t_proj_bottleneck = self.time_proj_bottleneck(t_emb) # B x D_bottleneck
 
