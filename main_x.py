@@ -62,7 +62,7 @@ def run(data_path='data/pbmc3k_2000.npy'):
 
     # -- Probabilistic Model --
     # model = DiffusionModel(nnet=nnet, timesteps=NUM_STEPS, beta_min=1e-4, beta_max=0.02, lr=LR, sequence_length=2000, T_max=100, device=DEVICE)
-    model = DiffusionModel(nnet=nnet, timesteps=NUM_STEPS, beta_min=1e-1, beta_max=0.9, lr=LR, sequence_length=2000, T_max=100, device=DEVICE)
+    model = DiffusionModel(nnet=nnet, timesteps=NUM_STEPS, beta_min=0.0001, beta_max=0.02, lr=LR, sequence_length=2000, T_max=100, device=DEVICE)
     model = model.to(DEVICE)
 
     # TRAINER

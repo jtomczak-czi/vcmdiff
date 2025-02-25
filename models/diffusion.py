@@ -29,10 +29,11 @@ class DiffusionModel(pl.LightningModule):
 
     def q_sample(self, x_start, t):
         """Adds Gaussian noise to the input signal according to the diffusion.py schedule."""
-        noise = torch.randn_like(x_start)
+        noise = torch.randn_like(x_start).to(x_start.device)
         self.alpha_cumprod = self.alpha_cumprod.to(x_start.device)
-        alpha_bar_t = self.alpha_cumprod[t].view(-1, 1, 1).to(x_start.device)
-        return torch.sqrt(alpha_bar_t) * x_start + torch.sqrt(1 - alpha_bar_t) * noise, noise
+        alpha_bar_t = self.alpha_cumprod[t].view(-1, 1).to(x_start.device)
+        x_noise = torch.sqrt(alpha_bar_t) * x_start + torch.sqrt(1 - alpha_bar_t) * noise
+        return x_noise, noise
 
     def simple_loss(self, x, t):
         x_noisy, noise = self.q_sample(x, t)
@@ -42,6 +43,7 @@ class DiffusionModel(pl.LightningModule):
 
     def simple_loss_full(self, batch, batch_idx):
         x, _ = batch
+        x = x.to(self.device)
         batch_size = x.shape[0]
         loss = 0.
 
@@ -78,7 +80,8 @@ class DiffusionModel(pl.LightningModule):
 
     def configure_optimizers(self):
         """Configure optimizer with Cosine Annealing Scheduler"""
-        optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr, betas=(0.9, 0.99))
+        # optimizer = torch.optim.AdamW(self.parameters(), lr=self.lr, betas=(0.9, 0.99))
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr, betas=(0.9, 0.99))
         scheduler = CosineAnnealingLR(optimizer, T_max=self.T_max, eta_min=self.lr * 0.001)
         return {"optimizer": optimizer, "lr_scheduler": scheduler, "monitor": "train_loss"}
 
@@ -96,8 +99,8 @@ class DiffusionModel(pl.LightningModule):
             predicted_noise = self(x, t_tensor)  # Predicted noise at timestep t
 
             # Compute α_t and noise scale
-            alpha_bar = self.alpha_cumprod[t].view(-1, 1, 1).to(self.device)
-            alpha = self.alphas[t].view(-1, 1, 1).to(self.device)
+            alpha_bar = self.alpha_cumprod[t].view(-1, 1).to(self.device)
+            alpha = self.alphas[t].view(-1, 1).to(self.device)
 
             noise = torch.randn_like(x) if t > 0 else torch.zeros_like(x)  # No noise when t=0
 
@@ -105,7 +108,7 @@ class DiffusionModel(pl.LightningModule):
             x = (x - ((1 - alpha) * predicted_noise / torch.sqrt(1 - alpha_bar))) / torch.sqrt(alpha)
             x = x + torch.sqrt(1 - alpha) * noise
 
-        return x
+        return torch.sigmoid(x)
 
 
 class PoissonDiffusionModel(pl.LightningModule):

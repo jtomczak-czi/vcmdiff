@@ -9,26 +9,32 @@ import anndata
 import scanpy as sc
 import umap
 
-from utils.mmd import MMDLoss, BrayCurtisKernel, TanimotoKernel
+from utils.mmd import MMDLoss, BrayCurtisKernel, TanimotoKernel, RBFKernel
 from utils.simple_functions import log1p
 
 
 def assess_gene_model1d_x(model_best, result_dir, name, test_data, N: int=1000, C: int=1, D: int=1000, bin_min=0, bin_max=300, prior=True):
-    x_data = test_data.data[:N, :, :].squeeze()
+    x_data = test_data.data[:N, :].squeeze()
 
     x1 = torch.round(torch.clamp(x_data, 0.))
     x1 = x1.to('cpu')
 
     # get a synthetic sample
-    gen_data = model_best.sample(shape=(x_data.shape[0], 1, x_data.shape[1])).squeeze()
+    gen_data = model_best.sample(shape=(x_data.shape[0], x_data.shape[1])).squeeze()
     gen_data = gen_data.to('cpu')
 
     x2 = torch.round(torch.clamp(gen_data, 0.))
+    plt.imshow(x1[0].view(28,28).cpu())
+    plt.savefig(result_dir + name + '_real_image.pdf', bbox_inches='tight', dpi=300)
+    plt.close()
     plt.imshow(x2[0].view(28,28).cpu())
-    plt.show()
+    plt.title(f'Max: {x2[0].max().item()}, Min: {x2[0].min().item()}')
+    plt.savefig(result_dir + name + '_gen_image.pdf', bbox_inches='tight', dpi=300)
+    plt.close()
 
     # Calculate the MMD loss
-    mmd = MMDLoss(kernel=BrayCurtisKernel())
+    # mmd = MMDLoss(kernel=BrayCurtisKernel())
+    mmd = MMDLoss(kernel=RBFKernel(scale=0.1))
     print(f'MMD: {mmd(x1, x2).item()}')
     # Caclulate the absolute diff between means
     print(f'ABS diff: {torch.abs(x1.mean(0) - x2.mean(0)).mean().item()}')

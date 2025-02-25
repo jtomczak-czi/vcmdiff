@@ -67,7 +67,7 @@ class UNetMLPln(nn.Module):
         self.time_proj_bottleneck = nn.Linear(in_dim, bottleneck_dim)
 
         # Encoder with Stricter Downsampling
-        self.ln_e1 = nn.LayerNorm(in_dim)
+        # self.ln_e1 = nn.LayerNorm(in_dim)
         self.enc1 = MLPblock([in_dim, mid_dim], activation=nn.SiLU())
         self.ln_e2 = nn.LayerNorm(mid_dim)
         self.enc2 = MLPblock([mid_dim, mid_dim], activation=nn.SiLU())
@@ -88,7 +88,6 @@ class UNetMLPln(nn.Module):
 
     def forward(self, x, t):
         # flatten
-        C = x.shape[1]
         x = x.flatten(1)
         # time embedding
         t_emb = self.time_embed(t) # B x D_in
@@ -96,7 +95,7 @@ class UNetMLPln(nn.Module):
         t_proj_bottleneck = self.time_proj_bottleneck(t_emb) # B x D_bottleneck
 
         # Encoding with Downsampling
-        x = self.ln_e1(x)
+        # x = self.ln_e1(x)
         e1 = self.enc1(x + t_emb)  # Downsampled
         e1 = self.ln_e2(e1)
         e2 = self.enc2(e1 + t_proj_enc)  # Downsampled
@@ -115,7 +114,7 @@ class UNetMLPln(nn.Module):
         d2 = self.ln_d1(d2)
         d1 = self.dec1(d2)  # Final layer
 
-        return d1.view(x.shape[0], C, -1)
+        return d1.view(x.shape[0], -1)
 
 
 class UNetMLP(nn.Module):
